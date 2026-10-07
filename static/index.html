@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediCost AI - Medical Insurance Cost Prediction & Health Optimizer</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+
+  <!-- Top Navigation Bar -->
+  <header class="glass-header sticky top-0 z-40 bg-white/90 shadow-sm border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white shadow-md">
+          <i data-lucide="shield-plus" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xl font-bold tracking-tight text-slate-900">MediCost<span class="text-blue-600">AI</span></span>
+            <span class="badge badge-primary font-mono text-xs">₹ INR Edition</span>
+          </div>
+          <p class="text-xs text-slate-500 hidden sm:block">Random Forest & SHAP Explainable Health Intelligence</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <div class="hidden md:flex items-center text-xs text-slate-500 bg-slate-100 rounded-lg px-3 py-1.5 border border-slate-200">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+          <span>RF Model: <strong>95.5% R²</strong> (25,000 Records)</span>
+        </div>
+        <button id="btn-print" onclick="window.print()" class="px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 shadow-sm flex items-center space-x-1.5">
+          <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+          <span>Print Report</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero & Preset Bar -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+    <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="relative z-10 max-w-3xl">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 text-xs font-semibold mb-3 border border-blue-400/30">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>Explainable AI (XAI) Health Economics</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
+          Medical Insurance Cost Predictor & Health Optimizer
+        </h1>
+        <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
+          Predict your annual health insurance premium in <strong class="text-white">Indian Rupees (₹)</strong> using our calibrated Random Forest model, and discover personalized, data-backed lifestyle suggestions powered by <strong class="text-cyan-300">SHAP Explainable AI</strong> to reduce your policy cost.
+        </p>
+
+        <!-- Quick Profile Presets -->
+        <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10">
+          <span class="text-xs text-slate-400 font-medium mr-1">⚡ Quick Load Profiles:</span>
+          <button onclick="loadPreset('elevated_risk')" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium text-white transition border border-white/10 flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+            <span>High Risk (Sedentary / Smoker)</span>
+          </button>
+          <button onclick="loadPreset('healthy_active')" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium text-white transition border border-white/10 flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Low Risk (Fit & Active)</span>
+          </button>
+          <button onclick="loadPreset('senior_moderate')" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium text-white transition border border-white/10 flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span>Senior Citizen (Managed Health)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Grid -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- Left Column: Input Form (5 cols) -->
+      <div class="lg:col-span-5 space-y-6">
+        <form id="insurance-form" onsubmit="handleFormSubmit(event)" class="card p-6 border-slate-200">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-200 mb-5">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="sliders" class="w-5 h-5 text-blue-600"></i>
+              <h2 class="text-lg font-bold text-slate-900">Applicant Details</h2>
+            </div>
+            <button type="button" onclick="resetDefaults()" class="text-xs text-slate-500 hover:text-blue-600 underline">
+              Reset
+            </button>
+          </div>
+
+          <!-- Section 1: Demographics & Geography -->
+          <div class="mb-5">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="user" class="w-3.5 h-3.5 mr-1.5"></i> Personal & Location
+            </h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Age (Years)</label>
+                <input type="number" id="in_age" min="16" max="80" value="42" required
+                  class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Gender</label>
+                <select id="in_Gender" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                  <option value="Male" selected>Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Occupation</label>
+                <select id="in_Occupation" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                  <option value="Salried" selected>Salaried</option>
+                  <option value="Business">Business</option>
+                  <option value="Student">Student</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">City / Location</label>
+                <select id="in_Location" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                  <!-- Populated dynamically via JS -->
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Body Vitals & Metabolic Health -->
+          <div class="mb-5 pt-4 border-t border-slate-100">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="heart" class="w-3.5 h-3.5 mr-1.5 text-rose-500"></i> Body Metrics & Clinical Vitals
+            </h3>
+            
+            <!-- Weight with Slider -->
+            <div class="mb-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="text-xs font-medium text-slate-700">Body Weight</label>
+                <div class="flex items-center space-x-1">
+                  <span id="weight-val-badge" class="text-sm font-bold text-blue-700 font-mono">79</span>
+                  <span class="text-xs text-slate-500">kg</span>
+                </div>
+              </div>
+              <input type="range" id="in_weight" min="50" max="98" step="1" value="79" oninput="syncWeight(this.value)"
+                class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
+                <span>50 kg</span>
+                <span>Normal: 58-70 kg</span>
+                <span>98 kg</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">BMI</label>
+                <input type="number" id="in_bmi" step="0.1" min="15" max="60" value="32.5" required
+                  class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Body Fat %</label>
+                <input type="number" id="in_fat_percentage" min="10" max="45" value="33" required
+                  class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Avg Glucose (mg/dL)</label>
+                <input type="number" id="in_avg_glucose_level" min="60" max="300" value="165" required
+                  class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Cholesterol Range</label>
+                <select id="in_cholesterol_level" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                  <option value="125 to 150">125 - 150 (Optimal)</option>
+                  <option value="150 to 175">150 - 175 (Normal)</option>
+                  <option value="175 to 200">175 - 200 (Borderline)</option>
+                  <option value="200 to 225" selected>200 - 225 (High)</option>
+                  <option value="225 to 250">225 - 250 (Very High)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Lifestyle & Physical Habits -->
+          <div class="mb-5 pt-4 border-t border-slate-100">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="activity" class="w-3.5 h-3.5 mr-1.5 text-blue-500"></i> Lifestyle & Daily Habits
+            </h3>
+
+            <!-- Daily Steps with Slider -->
+            <div class="mb-3 bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="text-xs font-medium text-slate-700">Daily Average Steps</label>
+                <div class="flex items-center space-x-1">
+                  <span id="steps-val-badge" class="text-sm font-bold text-blue-700 font-mono">3,800</span>
+                  <span class="text-xs text-slate-500">steps</span>
+                </div>
+              </div>
+              <input type="range" id="in_daily_avg_steps" min="2000" max="12000" step="200" value="3800" oninput="syncSteps(this.value)"
+                class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
+                <span>2k (Sedentary)</span>
+                <span>6k</span>
+                <span>12k (Active)</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Exercise Routine</label>
+                <select id="in_exercise" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                  <option value="No" selected>No Exercise</option>
+                  <option value="Moderate">Moderate (3x/wk)</option>
+                  <option value="Extreme">Extreme / Athlete</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Smoking Habit</label>
+                <select id="in_smoking_status" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                  <option value="never smoked">Never Smoked</option>
+                  <option value="formerly smoked">Formerly Smoked</option>
+                  <option value="smokes" selected>Active Smoker</option>
+                  <option value="Unknown">Unknown</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Alcohol Consumption</label>
+                <select id="in_Alcohol" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                  <option value="No">No Alcohol</option>
+                  <option value="Rare">Rare / Occasional</option>
+                  <option value="Daily" selected>Daily Consumption</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Adventure Sports</label>
+                <select id="in_adventure_sports" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                  <option value="0" selected>No</option>
+                  <option value="1">Yes (High-Risk)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Clinical History & Insurance Tenure -->
+          <div class="mb-6 pt-4 border-t border-slate-100">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center">
+              <i data-lucide="clipboard-list" class="w-3.5 h-3.5 mr-1.5 text-amber-500"></i> Medical History & Insurance
+            </h3>
+
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Heart Disease History</label>
+                <select id="in_heart_decs_history" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                  <option value="0" selected>No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Other Major Diseases</label>
+                <select id="in_other_major_decs_history" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                  <option value="0" selected>No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mb-3">
+              <div>
+                <label class="block text-[11px] font-medium text-slate-700 mb-1">Checkups/Yr</label>
+                <input type="number" id="in_regular_checkup_lasy_year" min="0" max="6" value="0"
+                  class="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-700 mb-1">Doctor Visits</label>
+                <input type="number" id="in_visited_doctor_last_1_year" min="0" max="15" value="4"
+                  class="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg">
+              </div>
+              <div>
+                <label class="block text-[11px] font-medium text-slate-700 mb-1">Weight Change</label>
+                <input type="number" id="in_weight_change_in_last_one_year" min="0" max="10" value="3"
+                  class="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Hospitalized Before?</label>
+                <select id="in_admitted_flag" onchange="toggleAdmissionYear(this.value)" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                  <option value="0" selected>No</option>
+                  <option value="1">Yes</option>
+                </select>
+              </div>
+              <div id="admitted_year_container" class="opacity-40 pointer-events-none">
+                <label class="block text-xs font-medium text-slate-700 mb-1">Year Last Admitted</label>
+                <input type="number" id="in_Year_last_admitted" min="1990" max="2022" value="2005"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Tenure with Us (Yrs)</label>
+                <input type="number" id="in_years_of_insurance_with_us" min="0" max="10" value="1"
+                  class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Other Insurer?</label>
+                <select id="in_covered_by_any_other_company" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg">
+                  <option value="N" selected>No</option>
+                  <option value="Y">Yes</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="submit-btn" class="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2">
+            <i data-lucide="calculator" class="w-4 h-4"></i>
+            <span>Calculate Premium & SHAP Insights</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Right Column: Results & Explainability (7 cols) -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- Initial Placeholder State (Shown prior to first calculation) -->
+        <div id="placeholder-view" class="card p-12 text-center border-dashed border-2 border-slate-300">
+          <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-600 mx-auto flex items-center justify-center mb-4">
+            <i data-lucide="activity" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-lg font-bold text-slate-800 mb-2">Ready to Analyze Insurance Economics</h3>
+          <p class="text-sm text-slate-500 max-w-md mx-auto mb-6">
+            Click <strong>"Calculate Premium & SHAP Insights"</strong> on the left or select a sample profile above to see real-time Random Forest predictions, SHAP explainable breakdown, and personalized health recommendations in Indian Rupees (₹).
+          </p>
+          <button onclick="loadPreset('elevated_risk')" class="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-medium text-sm shadow hover:bg-blue-700 transition">
+            Run High Risk Profile Demo
+          </button>
+        </div>
+
+        <!-- Live Results Container (Hidden until computed) -->
+        <div id="results-view" class="space-y-6 hidden animate-fade-in">
+
+          <!-- 1. Key Metrics Hero Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            
+            <!-- Predicted Premium Card -->
+            <div class="card p-5 bg-gradient-to-br from-white to-blue-50/50 border-blue-200/80 shadow-md sm:col-span-2 relative overflow-hidden">
+              <div class="flex items-start justify-between">
+                <div>
+                  <span class="text-xs font-semibold uppercase tracking-wider text-blue-600">Predicted Annual Premium</span>
+                  <div class="flex items-baseline space-x-1 mt-1">
+                    <span class="text-3xl sm:text-4xl font-extrabold text-slate-900 font-mono tracking-tight" id="display-cost">₹0</span>
+                    <span class="text-xs text-slate-500 font-medium">/ year</span>
+                  </div>
+                  <div class="text-xs text-slate-600 mt-1 font-mono">
+                    ≈ <strong class="text-slate-800" id="display-monthly">₹0</strong> / month
+                  </div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-blue-600/10 text-blue-600 flex items-center justify-center">
+                  <i data-lucide="indian-rupee" class="w-6 h-6"></i>
+                </div>
+              </div>
+
+              <!-- Difference from Population Average -->
+              <div class="mt-4 pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs">
+                <span class="text-slate-500">Benchmark Avg: <span class="font-mono font-medium text-slate-700">₹27,163</span></span>
+                <span id="display-diff-badge" class="badge badge-danger">
+                  +₹0 Above Avg
+                </span>
+              </div>
+            </div>
+
+            <!-- Health Risk Score Gauge Card -->
+            <div class="card p-5 flex flex-col items-center justify-center text-center">
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Health Wellness Score</span>
+              
+              <div class="gauge-container mb-2">
+                <svg class="gauge-svg w-full h-full" viewBox="0 0 100 100">
+                  <circle class="gauge-bg" cx="50" cy="50" r="40" />
+                  <circle id="gauge-circle" class="gauge-progress" cx="50" cy="50" r="40"
+                    stroke-dasharray="251.2" stroke-dashoffset="100" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span id="score-val" class="text-2xl font-bold font-mono text-slate-900">--</span>
+                  <span class="text-[10px] text-slate-400 uppercase font-semibold">out of 100</span>
+                </div>
+              </div>
+
+              <span id="score-grade" class="badge badge-warning text-xs font-bold">Checking...</span>
+            </div>
+          </div>
+
+          <!-- 2. Maximum Potential Savings Highlight Banner -->
+          <div class="card p-5 bg-gradient-to-r from-emerald-900 to-teal-900 text-white shadow-md border-emerald-800">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="flex items-center space-x-3.5">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 border border-emerald-400/30">
+                  <i data-lucide="piggy-bank" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <div class="text-xs text-emerald-300 font-semibold uppercase tracking-wider">Target Health Optimization Benefit</div>
+                  <h4 class="text-xl sm:text-2xl font-extrabold font-mono text-white mt-0.5">
+                    Save up to <span id="display-total-savings" class="text-emerald-300">₹0</span> / year
+                  </h4>
+                  <p class="text-xs text-emerald-200/80 mt-0.5" id="display-savings-subtitle">
+                    Lower your premium by 0.0% by adopting recommended lifestyle habits
+                  </p>
+                </div>
+              </div>
+              <div class="text-right sm:border-l sm:border-emerald-700/60 sm:pl-5">
+                <div class="text-[11px] text-emerald-300/80">Optimized Premium</div>
+                <div class="text-lg font-bold font-mono text-white" id="display-optimized-cost">₹0 / yr</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. SHAP Explainable AI Waterfall & Factor Breakdown -->
+          <div class="card p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-200 mb-4">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <i data-lucide="brain-circuit" class="w-5 h-5 text-indigo-600"></i>
+                  <h3 class="text-base font-bold text-slate-900">SHAP Explainable AI Factor Decomposition</h3>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Exact mathematical contribution of each risk factor pushing your premium up (+₹) or down (-₹).
+                </p>
+              </div>
+              <div class="flex items-center bg-slate-100 p-1 rounded-lg text-xs">
+                <button id="tab-actionable" onclick="setShapTab('actionable')" class="tab-btn px-3 py-1 rounded-md font-medium active">
+                  Actionable Habits
+                </button>
+                <button id="tab-all" onclick="setShapTab('all')" class="tab-btn px-3 py-1 rounded-md font-medium text-slate-600">
+                  All Underwriting Factors
+                </button>
+              </div>
+            </div>
+
+            <!-- Chart.js Canvas -->
+            <div class="h-64 relative mb-4">
+              <canvas id="shapChart"></canvas>
+            </div>
+
+            <!-- Top Factors Summary Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+              <!-- Factors Increasing Cost -->
+              <div class="bg-rose-50/60 rounded-xl p-4 border border-rose-100">
+                <div class="flex items-center space-x-2 text-xs font-bold text-rose-700 mb-2">
+                  <i data-lucide="trending-up" class="w-4 h-4"></i>
+                  <span>Factors Increasing Your Cost (+₹)</span>
+                </div>
+                <div id="cost-pushers-list" class="space-y-2 text-xs">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+
+              <!-- Factors Reducing Cost -->
+              <div class="bg-emerald-50/60 rounded-xl p-4 border border-emerald-100">
+                <div class="flex items-center space-x-2 text-xs font-bold text-emerald-700 mb-2">
+                  <i data-lucide="trending-down" class="w-4 h-4"></i>
+                  <span>Factors Reducing Your Cost (-₹)</span>
+                </div>
+                <div id="cost-savers-list" class="space-y-2 text-xs">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Actionable Health Suggestions & Savings Engine -->
+          <div class="card p-6">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200 mb-4">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="heart-pulse" class="w-5 h-5 text-emerald-600"></i>
+                <div>
+                  <h3 class="text-base font-bold text-slate-900">Personalized Health Optimization Plan</h3>
+                  <p class="text-xs text-slate-500">Actionable recommendations evaluated by our model to drop your insurance cost in ₹.</p>
+                </div>
+              </div>
+            </div>
+
+            <div id="recommendations-container" class="space-y-3">
+              <!-- Populated dynamically via JS -->
+            </div>
+          </div>
+
+          <!-- 5. Interactive "What-If" Health Simulator -->
+          <div class="card p-6 bg-slate-900 text-white shadow-xl">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="sliders-horizontal" class="w-5 h-5 text-cyan-400"></i>
+                <div>
+                  <h3 class="text-base font-bold text-white">Interactive "What-If" Health Simulator</h3>
+                  <p class="text-xs text-slate-400">Drag the lifestyle levers below to simulate instant real-time savings in Indian Rupees.</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-cyan-400 uppercase font-semibold">Live Recalculation</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+              <!-- Slider 1: Target Weight -->
+              <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
+                <div class="flex justify-between items-center text-xs mb-1.5">
+                  <span class="text-slate-300 font-medium">Target Weight</span>
+                  <span class="font-mono font-bold text-cyan-400"><span id="sim-weight-badge">70</span> kg</span>
+                </div>
+                <input type="range" id="sim_weight" min="52" max="95" step="1" value="70" oninput="runLiveSimulation()"
+                  class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+              </div>
+
+              <!-- Slider 2: Target Daily Steps -->
+              <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
+                <div class="flex justify-between items-center text-xs mb-1.5">
+                  <span class="text-slate-300 font-medium">Target Daily Steps</span>
+                  <span class="font-mono font-bold text-cyan-400"><span id="sim-steps-badge">8,500</span> steps</span>
+                </div>
+                <input type="range" id="sim_steps" min="2000" max="12000" step="500" value="8500" oninput="runLiveSimulation()"
+                  class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+              </div>
+
+              <!-- Selector 3: Smoking -->
+              <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
+                <label class="block text-xs text-slate-300 font-medium mb-1.5">Simulate Smoking Status</label>
+                <select id="sim_smoking" onchange="runLiveSimulation()"
+                  class="w-full px-3 py-1.5 text-xs bg-slate-900 border border-slate-700 rounded-lg text-white">
+                  <option value="never smoked">Never Smoked (Optimal)</option>
+                  <option value="formerly smoked">Formerly Smoked</option>
+                  <option value="smokes">Active Smoker</option>
+                </select>
+              </div>
+
+              <!-- Selector 4: Exercise Routine -->
+              <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700">
+                <label class="block text-xs text-slate-300 font-medium mb-1.5">Simulate Exercise Level</label>
+                <select id="sim_exercise" onchange="runLiveSimulation()"
+                  class="w-full px-3 py-1.5 text-xs bg-slate-900 border border-slate-700 rounded-lg text-white">
+                  <option value="Moderate">Moderate (3-4x weekly)</option>
+                  <option value="Extreme">Extreme / Athletic</option>
+                  <option value="No">No Exercise</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Live Simulator Result Card -->
+            <div class="bg-gradient-to-r from-blue-900/60 to-cyan-900/60 rounded-xl p-4 border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span class="text-xs text-cyan-200">Simulated Health Insurance Premium:</span>
+                <div class="text-2xl font-extrabold font-mono text-white mt-0.5">
+                  <span id="sim-display-cost">₹0</span> <span class="text-xs font-normal text-slate-300">/ yr</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-xs text-emerald-300 font-medium">Estimated Net Savings:</span>
+                <div class="text-xl font-bold font-mono text-emerald-400 mt-0.5" id="sim-display-savings">
+                  Save ₹0 / yr
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. Model Technical Architecture & Governance -->
+          <div class="card p-5 bg-slate-50 border-slate-200 text-xs text-slate-600">
+            <div class="flex items-center space-x-2 font-bold text-slate-800 mb-2">
+              <i data-lucide="info" class="w-4 h-4 text-blue-600"></i>
+              <span>Model Architecture & Algorithmic Transparency</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center my-3">
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm">
+                <div class="text-[10px] text-slate-400 uppercase font-semibold">Algorithm</div>
+                <div class="font-bold text-slate-800 text-xs mt-0.5">Random Forest Regressor</div>
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm">
+                <div class="text-[10px] text-slate-400 uppercase font-semibold">Test R² Score</div>
+                <div class="font-bold text-emerald-600 text-xs mt-0.5">0.955 (95.5%)</div>
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm">
+                <div class="text-[10px] text-slate-400 uppercase font-semibold">Mean Absolute Error</div>
+                <div class="font-bold text-slate-800 text-xs mt-0.5 font-mono">₹2,421</div>
+              </div>
+              <div class="bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm">
+                <div class="text-[10px] text-slate-400 uppercase font-semibold">Explainability</div>
+                <div class="font-bold text-indigo-600 text-xs mt-0.5">SHAP TreeExplainer</div>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500 leading-normal">
+              Trained on 25,000 policyholder records from the verified dataset. SHAP (SHapley Additive exPlanations) computes game-theoretic attribution for every applicant attribute, satisfying transparent insurance underwriting standards in India.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-16 border-t border-slate-200 bg-white py-8 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <p class="font-medium text-slate-700">MediCost AI &bull; Random Forest & SHAP Health Insurance Intelligence System</p>
+      <p class="mt-1 text-[11px] text-slate-400">All predictions and savings calculations are denominated in Indian Rupees (INR &bull; ₹) based on the provided dataset.</p>
+    </div>
+  </footer>
+
+  <!-- App Script -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
